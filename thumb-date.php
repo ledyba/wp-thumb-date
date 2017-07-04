@@ -10,27 +10,32 @@ License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 */
 
-function update_date_from_thumbnail($data, $postarr) {
-  $post_id = $postarr['ID'];;
+function update_date_from_thumbnail($post_id, $post, $updated) {
   $thumb_id = get_post_thumbnail_id( $post_id );
-  if(!$thumb_id) return $data;
+  if(!$thumb_id) return;
 
   $meta = wp_get_attachment_metadata($thumb_id, false);
-  if(!$meta) return $data;
+  if(!$meta) return;
 
   $meta = $meta['image_meta'];
-  if(!$meta) return $data;
+  if(!$meta) return;
 
   $stamp = $meta['created_timestamp'];
-  if(!$stamp) return $data;
+  if(!$stamp) return;
 
-  $data['post_date'] = date("Y-m-d H:i:s", $stamp);
-  $data['post_date_gmt'] = get_gmt_from_date($data['post_date']);
-  
+  $post_date = date("Y-m-d H:i:s", $stamp);
+  $post_date_gmt = get_gmt_from_date($post_date);
 
-  return $data;
+  if (!wp_is_post_revision($post_id)) {
+    remove_action('save_post', 'update_date_from_thumbnail');
+    wp_update_post(array(
+      'ID'            => $post_id,
+      'post_date'     => $post_date,
+      'post_date_gmt' => $post_date_gmt,
+    ));
+    add_action('save_post', 'update_date_from_thumbnail', 10, 3);
+  }
 }
 
-add_filter('wp_insert_post_data', 'update_date_from_thumbnail' , '99', 2 );
-
+add_action('save_post', 'update_date_from_thumbnail', 10, 3);
 ?>
