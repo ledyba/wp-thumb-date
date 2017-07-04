@@ -32,6 +32,7 @@ function update_date_from_thumbnail($post_id, $post, $updated) {
       'ID'            => $post_id,
       'post_date'     => $post_date,
       'post_date_gmt' => $post_date_gmt,
+      'post_category' => array(get_category_by_slug('photo')->cat_ID),
     ));
     add_action('save_post', 'update_date_from_thumbnail', 10, 3);
   }
